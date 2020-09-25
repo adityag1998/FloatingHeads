@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
-    // Request Service Code
+    // Request Service Code for Overlay Settings
     private static final int POPUP_DRAW_OVER_OTHER_APP_PERMISSION = 1001;
 
     private void initializeView() {
@@ -44,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    // For Android P or greater, it is not mandatory for settings to return RESULT_OK on settings change
+    // That's why explicit check is made for settings.canDrawOverlays additionally
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == POPUP_DRAW_OVER_OTHER_APP_PERMISSION) {

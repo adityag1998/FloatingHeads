@@ -1,5 +1,6 @@
 package com.samsung.floatingheads;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -12,9 +13,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class FloatingPopupService extends Service {
     private View mFloatingView;
@@ -31,13 +30,14 @@ public class FloatingPopupService extends Service {
         return null;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onCreate() {
         super.onCreate();
         // Inflate the floating view created
-        mFloatingView = LayoutInflater.from(this).inflate(R.layout.floating_widget , null);
+        mFloatingView = LayoutInflater.from(this).inflate(R.layout.floating_note_widget , null);
 
-        // Provide a parameter instantiate for window to view to populate
+        // Provide a parameter instantiator for window to populate my view
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -45,37 +45,36 @@ public class FloatingPopupService extends Service {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
 
-        //Specify the view position
-        params.gravity = Gravity.TOP | Gravity.LEFT;   //Initially view will be added to top-left corner
-        params.x = 0;
-        params.y = 100;
+        //Specify the window parameters using instatiator
+        params.gravity = Gravity.TOP | Gravity.LEFT;
+        //Initially view will be added to top-left corner
 
-        //Add the view to the window
+        //Bind the view to the window
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         mWindowManager.addView(mFloatingView, params);
 
-        // Bind my NoteBubble (default_view : behaviour of NOTE DESCRIPTION = OFF)
-        // [Bubble + Object Name Text + Small Close Button + Note Desc(OFF by default)]
-        // ALso bind its various sub elements
+        // Bind all Elements from XML to Java
         View default_view = mFloatingView.findViewById(R.id.complete_bubble);
 
         TextView objectName = (TextView) default_view.findViewById(R.id.object_name_text);
+
+        //Dynamically Setting properties for objectName
         objectName.setEllipsize(TextUtils.TruncateAt.MARQUEE);
         objectName.setSingleLine(true);
         objectName.setSelected(true);
         objectName.setMarqueeRepeatLimit(-1);
+        // Retrieve and set objectName
+        // TODO: objectName.setText(Object Name from Camera)
 
         ImageView closeButton = (ImageView) default_view.findViewById(R.id.click_to_close);
 
         ImageView objectCircle = (ImageView) default_view.findViewById(R.id.object_name_circle);
 
         final TextView noteText = (TextView) default_view.findViewById(R.id.note_name_text);
-
-        // Retrieve and set objectName
-        //TODO: objectName.setText(Object Name from Camera)
-
+        // Dynamically set NoteText Property
+        noteText.setVisibility(View.GONE);
         // Retrieve and set note Description
-        //TODO : noteText.setText (Asynchronus Task from DB Fetch Query)
+        //TODO : noteText.setText (Note Text from SmartNotes)
 
         //OnClickListener for closeButton
         closeButton.setOnClickListener(new View.OnClickListener() {
@@ -104,17 +103,19 @@ public class FloatingPopupService extends Service {
         noteText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Either Create New Note or Open Existing
+                // TODO: Either Create New Note [If no note found]
+                //  OR Open Existing Note in Note Editor Activity with key filled as Object name
             }
         });
 
-        //Drag Logic for Complete Bubble on Touch
-        default_view.setOnTouchListener(new LinearLayout.OnTouchListener() {
+        //Drag Logic for Object Circle on Touch
+        objectCircle.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
             private int initialY;
             private float initialTouchX;
             private float initialTouchY;
 
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 Log.d(TAG, "onTouch: I have reached onTouch");
@@ -158,12 +159,10 @@ public class FloatingPopupService extends Service {
         });
     }
 
-
+    // On Destroy of service please do the following
     @Override
     public void onDestroy() {
         super.onDestroy();
         if (mFloatingView != null) mWindowManager.removeView(mFloatingView);
     }
-
-
 }
